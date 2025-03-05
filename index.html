@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Attendance Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-gray-50 font-[Inter]">
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold">College Attendance Management System</h1>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4">
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Student Management -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Student Management</h2>
+                <form id="studentForm" class="space-y-4">
+                    <div>
+                        <label class="block mb-1">Student Name</label>
+                        <input type="text" id="studentName" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label class="block mb-1">Roll Number</label>
+                        <input type="text" id="rollNumber" class="w-full p-2 border rounded" required>
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Add Student
+                    </button>
+                </form>
+                
+                <div class="mt-6">
+                    <h3 class="font-semibold mb-2">Student List</h3>
+                    <div id="studentList" class="space-y-2">
+                        <!-- Student list will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Management -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Subject Management</h2>
+                <form id="subjectForm" class="space-y-4">
+                    <div>
+                        <label class="block mb-1">Subject Name</label>
+                        <input type="text" id="subjectName" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label class="block mb-1">Subject Code</label>
+                        <input type="text" id="subjectCode" class="w-full p-2 border rounded" required>
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Add Subject
+                    </button>
+                </form>
+
+                <div class="mt-6">
+                    <h3 class="font-semibold mb-2">Subject List</h3>
+                    <div id="subjectList" class="space-y-2">
+                        <!-- Subject list will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Section -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Mark Attendance</h2>
+            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block mb-1">Select Date</label>
+                    <input type="date" id="attendanceDate" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block mb-1">Select Subject</label>
+                    <select id="attendanceSubject" class="w-full p-2 border rounded" required>
+                        <option value="">Select Subject</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="attendanceSheet" class="mt-4">
+                <!-- Attendance sheet will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let students = [];
+        let subjects = [];
+        let attendance = {};
+
+        // Form submissions
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('studentName').value;
+            const roll = document.getElementById('rollNumber').value;
+            
+            students.push({ name, roll });
+            updateStudentList();
+            this.reset();
+        });
+
+        document.getElementById('subjectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('subjectName').value;
+            const code = document.getElementById('subjectCode').value;
+            
+            subjects.push({ name, code });
+            updateSubjectList();
+            updateSubjectDropdown();
+            this.reset();
+        });
+
+        // Update displays
+        function updateStudentList() {
+            const list = document.getElementById('studentList');
+            list.innerHTML = students.map(student => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div>
+                        <span class="font-semibold">${student.name}</span>
+                        <span class="text-sm text-gray-600">(${student.roll})</span>
+                    </div>
+                    <button onclick="removeStudent('${student.roll}')" class="text-red-600 hover:text-red-800">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+            updateAttendanceSheet();
+        }
+
+        function updateSubjectList() {
+            const list = document.getElementById('subjectList');
+            list.innerHTML = subjects.map(subject => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div>
+                        <span class="font-semibold">${subject.name}</span>
+                        <span class="text-sm text-gray-600">(${subject.code})</span>
+                    </div>
+                    <button onclick="removeSubject('${subject.code}')" class="text-red-600 hover:text-red-800">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateSubjectDropdown() {
+            const select = document.getElementById('attendanceSubject');
+            select.innerHTML = '<option value="">Select Subject</option>' + 
+                subjects.map(subject => `
+                    <option value="${subject.code}">${subject.name}</option>
+                `).join('');
+        }
+
+        function updateAttendanceSheet() {
+            const subject = document.getElementById('attendanceSubject').value;
+            const date = document.getElementById('attendanceDate').value;
+            
+            if (!subject || !date) return;
+
+            const sheet = document.getElementById('attendanceSheet');
+            sheet.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border p-2 text-left">Roll No</th>
+                                <th class="border p-2 text-left">Name</th>
+                                <th class="border p-2 text-center">Attendance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${students.map(student => `
+                                <tr>
+                                    <td class="border p-2">${student.roll}</td>
+                                    <td class="border p-2">${student.name}</td>
+                                    <td class="border p-2 text-center">
+                                        <select 
+                                            class="p-1 rounded border" 
+                                            onchange="markAttendance('${student.roll}', '${subject}', '${date}', this.value)"
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="present">Present</option>
+                                            <option value="absent">Absent</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Event listeners for attendance sheet updates
+        document.getElementById('attendanceDate').addEventListener('change', updateAttendanceSheet);
+        document.getElementById('attendanceSubject').addEventListener('change', updateAttendanceSheet);
+
+        // Attendance marking
+        function markAttendance(roll, subject, date, status) {
+            const key = `${roll}-${subject}-${date}`;
+            attendance[key] = status;
+            console.log('Attendance marked:', { roll, subject, date, status });
+        }
+
+        // Remove functions
+        function removeStudent(roll) {
+            students = students.filter(s => s.roll !== roll);
+            updateStudentList();
+        }
+
+        function removeSubject(code) {
+            subjects = subjects.filter(s => s.code !== code);
+            updateSubjectList();
+            updateSubjectDropdown();
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
